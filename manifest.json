@@ -1,0 +1,11 @@
+{
+  "name": "Nómina Contact Center 2026",
+  "short_name": "Nómina CC",
+  "description": "Calculadora de nómina del convenio de Contact Center 2026",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#1565c0",
+  "lang": "es"
+}
