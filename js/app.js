@@ -58,6 +58,15 @@ function mostrarGrafico() {
     });
 }
 
+// Instalación y funcionamiento sin conexión
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(e =>
+            console.warn("No se pudo registrar el service worker", e)
+        );
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll("nav button").forEach(b =>
