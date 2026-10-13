@@ -52,12 +52,41 @@ function claveDia(anio, mes, dia) {
     return `${anio}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
 }
 
-function contarTeletrabajoMes(anio, mes) {
-    const datos = leerCalendario();
-    const prefijo = `${anio}-${String(mes + 1).padStart(2, "0")}-`;
-    return Object.keys(datos).filter(
-        k => k.startsWith(prefijo) && datos[k] === "teletrabajo"
-    ).length;
+/*
+Cuenta, para el mes indicado, lo que se paga en nómina según el convenio
+(art. 49): festivos normales y especiales trabajados, y domingos trabajados.
+Un día cuenta como trabajado si está marcado como Oficina o Teletrabajo.
+No se acumulan domingo y festivo especial: prevalece el especial.
+*/
+function resumenMes(anio, mes, datos) {
+
+    const fest = festivosDelAnio(anio);
+
+    const r = { tele: 0, festivosNormales: 0, festivosEspeciales: 0, domingos: 0 };
+
+    const dias = new Date(anio, mes + 1, 0).getDate();
+
+    for (let d = 1; d <= dias; d++) {
+
+        const clave = claveDia(anio, mes, d);
+        const tipo = datos[clave];
+
+        if (tipo !== "oficina" && tipo !== "teletrabajo") continue;
+
+        if (tipo === "teletrabajo") r.tele++;
+
+        const f = fest[clave];
+        const esDomingo = new Date(anio, mes, d).getDay() === 0;
+
+        if (f && f.especial) {
+            r.festivosEspeciales++;
+        } else {
+            if (f) r.festivosNormales++;
+            if (esDomingo) r.domingos++;
+        }
+    }
+
+    return r;
 }
 
 function cambiarMesCalendario(delta) {
@@ -88,7 +117,7 @@ function mostrarCalendario() {
     let html = `
         <div style="grid-column:1/-1" class="linea">
             <button data-mes="-1">◀</button>
-            <strong style="text-transform:capitalize">${nombreMes}</strong>
+            <strong>${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)}</strong>
             <button data-mes="1">▶</button>
         </div>`;
 
@@ -98,21 +127,62 @@ function mostrarCalendario() {
 
     for (let i = 0; i < primerDia; i++) html += "<div></div>";
 
+    const fest = festivosDelAnio(anio);
+
     for (let d = 1; d <= diasMes; d++) {
-        const tipo = datos[claveDia(anio, mes, d)] || "";
+        const clave = claveDia(anio, mes, d);
+        const tipo = datos[clave] || "";
+        const f = fest[clave];
         html += `
-            <div class="dia ${tipo}" data-dia="${d}">
+            <div class="dia ${tipo}${f ? " festivo" : ""}" data-dia="${d}"${f ? ` title="${f.nombre}"` : ""}>
                 <strong>${d}</strong><br>
                 <small>${ETIQUETAS_DIA[tipo] || ""}</small>
+                ${f ? `<small class="nombre-festivo">${f.nombre}</small>` : ""}
             </div>`;
     }
 
-    const tele = contarTeletrabajoMes(anio, mes);
+    // Lista de festivos del mes
+    const prefijo = `${anio}-${String(mes + 1).padStart(2, "0")}-`;
+    const festivosMes = Object.keys(fest).filter(k => k.startsWith(prefijo)).sort();
+
+    html += `<div style="grid-column:1/-1">
+        <h3 style="margin:10px 0 6px">Festivos del mes</h3>`;
+
+    if (festivosMes.length === 0) {
+        html += "<p>Este mes no tiene festivos.</p>";
+    } else {
+        festivosMes.forEach(k => {
+            const f = fest[k];
+            const dia = new Date(anio, mes, Number(k.slice(8))).toLocaleDateString(
+                "es-ES", { weekday: "long", day: "numeric" }
+            );
+            html += `
+                <div class="linea">
+                    <span style="text-transform:capitalize;white-space:nowrap">${dia}</span>
+                    <span style="text-align:right">${f.nombre} · ${f.ambito}${f.especial ? " · especial" : ""}</span>
+                </div>`;
+        });
+    }
+
+    html += `<p style="margin-top:8px;font-size:.8rem;color:var(--text-light)">
+        Borde rojo = festivo. ${notaFestivos(anio)}</p></div>`;
+
+    // Resumen para la nómina
+    const r = resumenMes(anio, mes, datos);
 
     html += `
-        <div style="grid-column:1/-1" class="linea">
-            <span>Días de teletrabajo este mes: <strong>${tele}</strong></span>
-            <button id="btnVolcarTele">Usar en la nómina</button>
+        <div style="grid-column:1/-1">
+            <div class="linea"><span>Días de teletrabajo</span><strong>${r.tele}</strong></div>
+            <div class="linea"><span>Festivos normales trabajados</span><strong>${r.festivosNormales}</strong></div>
+            <div class="linea"><span>Festivos especiales trabajados</span><strong>${r.festivosEspeciales}</strong></div>
+            <div class="linea"><span>Domingos trabajados</span><strong>${r.domingos}</strong></div>
+            <p style="margin:6px 0;font-size:.8rem;color:var(--text-light)">
+                Cuentan como trabajados los días marcados como Oficina o Teletrabajo.
+                Los días 24 y 31 de diciembre desde las 20:00 no se calculan solos.
+            </p>
+            <button id="btnVolcarTele" style="width:100%;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:700;cursor:pointer">
+                Usar en la nómina
+            </button>
         </div>`;
 
     cont.innerHTML = html;
@@ -137,8 +207,17 @@ function mostrarCalendario() {
     const btn = document.getElementById("btnVolcarTele");
     if (btn) {
         btn.addEventListener("click", () => {
-            document.getElementById("diasTeletrabajo").value = tele;
-            alert(`Se han copiado ${tele} días de teletrabajo a la pestaña Nómina.`);
+            document.getElementById("diasTeletrabajo").value = r.tele;
+            document.getElementById("festivosNormales").value = r.festivosNormales;
+            document.getElementById("festivosEspeciales").value = r.festivosEspeciales;
+            document.getElementById("domingos").value = r.domingos;
+            alert(
+                "Copiado a la pestaña Nómina:\n\n" +
+                `• Teletrabajo: ${r.tele} días\n` +
+                `• Festivos normales: ${r.festivosNormales}\n` +
+                `• Festivos especiales: ${r.festivosEspeciales}\n` +
+                `• Domingos: ${r.domingos}`
+            );
         });
     }
 }

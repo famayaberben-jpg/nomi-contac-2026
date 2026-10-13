@@ -10,7 +10,7 @@ Si cambias la lista de ARCHIVOS, sube también el número de VERSION.
 =========================================
 */
 
-const VERSION = "v2";
+const VERSION = "v3";
 const CACHE = "nomina-contact-center-2026-" + VERSION;
 
 const ARCHIVOS = [
@@ -24,6 +24,7 @@ const ARCHIVOS = [
     "./js/irpf.js",
     "./js/seguridadsocial.js",
     "./js/historico.js",
+    "./js/festivos.js",
     "./js/calendario.js",
     "./js/backup.js",
     "./js/pdf.js",
