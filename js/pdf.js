@@ -53,7 +53,6 @@ function exportarPDF(r) {
         ["Festivos especiales", c.festivosEspeciales],
         ["Domingos", c.domingos],
         ["Horas extra", c.horasExtra],
-        ["Antiguedad", c.antiguedad],
         ["Otros complementos", c.otros]
     ].forEach(([t, v]) => linea(t, v));
 
@@ -70,8 +69,6 @@ function exportarPDF(r) {
     linea(`IRPF (${r.irpf.tipo.toFixed(2).replace(".", ",")} %)`, r.irpf.retencion, true);
     y += 4;
 
-    linea("Dietas", r.noSalarial.dietas);
-    linea("Kilometraje", r.noSalarial.kilometraje);
     linea("Teletrabajo", r.noSalarial.teletrabajo);
     linea("Total no salariales", r.noSalarial.total, true);
     y += 4;

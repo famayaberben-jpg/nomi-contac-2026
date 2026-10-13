@@ -10,7 +10,7 @@ Si cambias la lista de ARCHIVOS, sube también el número de VERSION.
 =========================================
 */
 
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = "nomina-contact-center-2026-" + VERSION;
 
 const ARCHIVOS = [

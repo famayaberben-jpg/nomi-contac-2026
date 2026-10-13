@@ -25,10 +25,10 @@ CALCULO PRINCIPAL
 =========================================
 datos = {
   nivel, contrato, jornada, prorrata ("si"/"no"),
-  antiguedad, plusIdioma (bool), horasNocturnas,
+  plusIdioma (bool), horasNocturnas,
   diasTransporte, festivosNormales, festivosEspeciales,
   domingos, horasExtra, precioHoraExtra, otrosComplementos,
-  dieta1, dieta2, kilometros, diasTeletrabajo
+  diasTeletrabajo
 }
 =========================================
 */
@@ -80,28 +80,17 @@ function calcularNomina(datos) {
     const horasExtra =
         redondear(num(datos.horasExtra) * num(datos.precioHoraExtra));
 
-    const antiguedad = redondear(num(datos.antiguedad));
-
     const otros = redondear(num(datos.otrosComplementos));
 
     const complementos =
         plusIdioma + nocturnidad + transporte +
         festivosNormales + festivosEspeciales +
-        domingos + horasExtra + antiguedad + otros;
+        domingos + horasExtra + otros;
 
     const brutoSalarial =
         redondear(salarioBaseMes + complementos);
 
     // ---- Percepciones no salariales
-    const dietas =
-        redondear(
-            num(datos.dieta1) * obtenerDietaUnaComida() +
-            num(datos.dieta2) * obtenerDietaDosComidas()
-        );
-
-    const kilometraje =
-        redondear(num(datos.kilometros) * obtenerKilometraje());
-
     const teletrabajo =
         redondear(
             num(datos.diasTeletrabajo) *
@@ -109,7 +98,7 @@ function calcularNomina(datos) {
         );
 
     const noSalarial =
-        redondear(dietas + kilometraje + teletrabajo);
+        redondear(teletrabajo);
 
     // ---- Seguridad Social
     // La base siempre incluye la parte proporcional de las extras.
@@ -148,10 +137,10 @@ function calcularNomina(datos) {
         complementos: {
             plusIdioma, nocturnidad, transporte,
             festivosNormales, festivosEspeciales,
-            domingos, horasExtra, antiguedad, otros
+            domingos, horasExtra, otros
         },
         brutoSalarial,
-        noSalarial: { dietas, kilometraje, teletrabajo, total: noSalarial },
+        noSalarial: { teletrabajo, total: noSalarial },
         ss,
         irpf,
         retribucionAnual,
@@ -174,7 +163,6 @@ function leerFormulario() {
         contrato: val("contrato"),
         jornada: val("jornada"),
         prorrata: val("prorrata"),
-        antiguedad: val("antiguedad"),
         plusIdioma: document.getElementById("plusIdioma").checked,
         horasNocturnas: val("horasNocturnas"),
         diasTransporte: val("diasTransporte"),
@@ -184,9 +172,6 @@ function leerFormulario() {
         horasExtra: val("horasExtra"),
         precioHoraExtra: val("precioHoraExtra"),
         otrosComplementos: val("otrosComplementos"),
-        dieta1: val("dieta1"),
-        dieta2: val("dieta2"),
-        kilometros: val("kilometros"),
         diasTeletrabajo: val("diasTeletrabajo")
     };
 }
@@ -229,7 +214,6 @@ function generarDetalleNomina(r) {
         ["Festivos especiales", c.festivosEspeciales],
         ["Domingos", c.domingos],
         ["Horas extra", c.horasExtra],
-        ["Antigüedad", c.antiguedad],
         ["Otros complementos", c.otros]
     ];
 
@@ -250,8 +234,6 @@ function generarDetalleNomina(r) {
     );
 
     html += "<hr>";
-    html += linea("Dietas", r.noSalarial.dietas);
-    html += linea("Kilometraje", r.noSalarial.kilometraje);
     html += linea("Teletrabajo", r.noSalarial.teletrabajo);
     html += linea("Total no salarial", r.noSalarial.total);
 

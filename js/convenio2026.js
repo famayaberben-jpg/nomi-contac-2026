@@ -114,20 +114,6 @@ const CONVENIO_2026 = {
 
     },
 
-    dietas: {
-
-        unaComida: 17.96,
-
-        dosComidas: 31.65
-
-    },
-
-    kilometraje: {
-
-        importeKm: 0.24
-
-    }
-
 };
 
 /*
@@ -179,14 +165,3 @@ function obtenerTeletrabajo(jornadaSemanal) {
         : CONVENIO_2026.teletrabajo.jornadaMenor30h;
 }
 
-function obtenerDietaUnaComida() {
-    return CONVENIO_2026.dietas.unaComida;
-}
-
-function obtenerDietaDosComidas() {
-    return CONVENIO_2026.dietas.dosComidas;
-}
-
-function obtenerKilometraje() {
-    return CONVENIO_2026.kilometraje.importeKm;
-}
